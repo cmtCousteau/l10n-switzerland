@@ -2,7 +2,7 @@
 <openerp>
     <data>
         <!-- view of this wizard -->
-        <record model="ir.ui.view" id="view_fds_files_import_tobankstatments_wizard_form">
+        <record model="ir.ui.view" id="view_fds_files_import_tobankstatments_download_wizard_form">
             <field name="name">Download FDS Files</field>
             <field name="model">fds.files.import.tobankstatments.wizard</field>
             <field name="arch" type="xml">
@@ -36,7 +36,7 @@
         </record>
 
         <!-- Actions for opening the wizard -->
-        <act_window id="action_fds_files_import_tobankstatments_wizard"
+        <act_window id="action_fds_files_import_tobankstatments_download_wizard"
                 name="Download FDS files"
                 res_model="fds.files.import.tobankstatments.wizard"
                 src_model="fds.postfinance.account"

@@ -34,7 +34,7 @@ from openerp import models, fields, api
 _logger = logging.getLogger(__name__)
 
 
-class FdsFilesImportToBankStatementsWizard(models.TransientModel):
+class FdsFilesImportTobankstatmentsWizard(models.TransientModel):
     ''' This wizard checks and downloads files in FDS Postfinance server
         that were not already downloaded on the database.
         This wizard is called when we choose the update_fds for one FDS.
@@ -157,7 +157,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
                 - directories from fds.pf.files.directory
                 - tmp directory name
                 - fds account
-            :returns recordset: of download files (model fds.postfinance.files)
+            :returns recordset: of download files (model fds.postfinance.file)
         '''
         fds_files_ids = self.env['fds.postfinance.file']
         for d in directories:
@@ -201,7 +201,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
     def _import2bankStatements(self, fds_files_ids):
         ''' private function that import the files to bank statments
 
-            :param recordset: of model fds_postfinance_files
+            :param recordset: of model fds_postfinance_file
             :returns None:
         '''
         for fds_file in fds_files_ids:

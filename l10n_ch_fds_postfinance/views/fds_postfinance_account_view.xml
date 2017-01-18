@@ -62,7 +62,6 @@
                                     <field name="excluded_files"/>
                                     <field name="allow_upload_file" attrs="{'invisible': [('still_on_server', '=', False)]}"/>
                                     <field name="still_on_server" invisible="True"/>
-                                    <field name="journal_id" />
                                 </tree>
                             </field>
                         </page>
@@ -74,7 +73,6 @@
                                     <field name="directory_id" />
                                     <field name="filename" />
                                     <field name="bank_statement_id"/>
-                                    <field name="journal_id" />
                                     <field name="state" />
                                 </tree>
                             </field>

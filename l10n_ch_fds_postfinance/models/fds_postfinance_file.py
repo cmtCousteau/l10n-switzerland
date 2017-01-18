@@ -58,13 +58,6 @@ class FdsPostfinanceFile(models.Model):
         ondelete='restrict',
         readonly=True,
     )
-    journal_id = fields.Many2one(
-        comodel_name='account.journal',
-        related='directory_id.journal_id',
-        string='journal',
-        ondelete='restrict',
-        help='default journal for this file'
-    )
     state = fields.Selection(
         selection=[('draft', 'Draft'),
                    ('done', 'Done'),
@@ -96,7 +89,7 @@ class FdsPostfinanceFile(models.Model):
             :return None:
         '''
         valid_files = self.filtered(lambda f: f.state == 'draft')
-        valid_files._sate_error_on()
+        valid_files._state_error_on()
 
     @api.multi
     def change2draft_button(self):
@@ -130,27 +123,44 @@ class FdsPostfinanceFile(models.Model):
         '''
         try:
             values = {
-                'journal_id': self.directory_id.journal_id.id,
                 'data_file': self.data}
-            bs_imoprt_obj = self.env['account.bank.statement.import']
-            bank_wiz_imp = bs_imoprt_obj.create(values)
-            import_result = bank_wiz_imp.import_file()
-            # Mark the file as imported, remove binary as it should be
-            # attached to the statement.
-            self.write({
-                'state': 'done',
-                'data': None,
-                'bank_statement_id':
-                import_result['context']['statement_ids'][0]})
+            bs_import_obj = self.env['account.bank.statement.import']
+            bank_wiz_imp = bs_import_obj.create(values)
+            result = bank_wiz_imp.import_file()
+            self.write({'bank_statement_id': result[
+                       'context']['statement_ids'][0]})
+            self._state_done_on()
+            self._add_bankStatement_ref()
+            self._remove_binary_file()
             _logger.info("[OK] import file '%s' to bank Statements",
                          (self.filename))
             return True
         except:
+            self._state_error_on()
             _logger.warning("[FAIL] import file '%s' to bank Statements",
                             (self.filename))
             return False
 
-    def _sate_error_on(self):
+    @api.multi
+    def _remove_binary_file(self):
+        ''' private function that remove the binary file.
+            the binary file is already convert to bank statment attachment.
+
+            :returns None:
+        '''
+        self.write({'data': None})
+
+    @api.multi
+    def _state_done_on(self):
+        ''' private function that change state to done
+
+            :returns: None
+        '''
+        self.ensure_one()
+        self.write({'state': 'done'})
+
+    @api.multi
+    def _state_error_on(self):
         ''' private function that change state to error
 
             :returns: None
