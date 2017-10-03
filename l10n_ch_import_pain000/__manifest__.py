@@ -6,6 +6,6 @@
     'website': '...',
     'category': 'Banking addons',
     'depends': [
-        'account',
+        'account_bank_statement_import_camt',
     ],
 }

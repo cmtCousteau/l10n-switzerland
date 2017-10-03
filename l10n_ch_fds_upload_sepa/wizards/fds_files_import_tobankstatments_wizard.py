@@ -30,5 +30,7 @@ class FdsFilesImportToBankStatementsWizardPain000(models.TransientModel):
                     return super(
                         FdsFilesImportToBankStatementsWizardPain000, self)._import2bankStatements(fds_files_ids)
 
-        self.msg_file_imported += fds_file.filename + "; "
-        return True
+            self.msg_file_imported += fds_file.filename + "; "
+            return True
+        return super(FdsFilesImportToBankStatementsWizardPain000,
+                     self)._import2bankStatements(fds_files_ids)

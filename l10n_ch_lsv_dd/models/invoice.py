@@ -37,10 +37,12 @@ class AccountInvoice(models.Model):
             in a new payment order.
         '''
         mov_line_obj = self.env['account.move.line']
-        pay_line_obj = self.env['payment.line']
-        pay_order_obj = self.env['payment.order']
+        pay_line_obj = self.env['account.payment.line']
+        undo_payment_line_obj = self.env['account.undo.payment_line']
+
         active_ids = self.env.context.get('active_ids')
         move_ids = self.browse(active_ids).mapped('move_id.id')
+
         move_line_ids = mov_line_obj.search([('move_id', 'in', move_ids)]).ids
         pay_lines = pay_line_obj.search([('move_line_id',
                                           'in', move_line_ids)])
@@ -48,14 +50,6 @@ class AccountInvoice(models.Model):
             raise exceptions.Warning(_('No payment line found !'))
 
         old_pay_order = pay_lines[0].order_id
-        vals = {
-            'date_created': old_pay_order.date_created,
-            'date_prefered': old_pay_order.date_prefered,
-            'payment_order_type': old_pay_order.payment_order_type,
-            'mode': old_pay_order.mode.id,
-        }
 
-        pay_order = pay_order_obj.create(vals)
-        pay_order.signal_workflow('cancel')
-        pay_lines.write({'order_id': pay_order.id})
-        return pay_order
+        undo_payment_line_obj.undo_payment_line(old_pay_order, pay_lines, None)
+
