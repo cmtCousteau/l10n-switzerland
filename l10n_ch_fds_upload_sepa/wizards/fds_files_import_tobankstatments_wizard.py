@@ -27,8 +27,8 @@ class FdsFilesImportToBankStatementsWizardPain000(models.TransientModel):
 
                     _logger.info("[OK] import file '%s' to bank Statements",(pf_file.filename))
                 else:
-                    return super(
-                        FdsFilesImportToBankStatementsWizardPain000, self)._import2bankStatements(fds_files_ids)
+                    return super(FdsFilesImportToBankStatementsWizardPain000, self)._import2bankStatements(fds_files_ids)
 
-        self.msg_file_imported += fds_file.filename + "; "
-        return True
+            self.msg_file_imported += fds_file.filename + "; "
+            return True
+        return super(FdsFilesImportToBankStatementsWizardPain000,self)._import2bankStatements(fds_files_ids)

@@ -64,5 +64,5 @@ class Pain000Parser(models.AbstractModel):
                                 payment_order_obj,
                                 payment_line_obj,
                                 result)
-                        return True
+                    return True
         return False
