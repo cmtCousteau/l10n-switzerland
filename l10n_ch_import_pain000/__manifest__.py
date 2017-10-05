@@ -3,9 +3,17 @@
     'version': '10.0.1.0.0',
     'license': 'AGPL-3',
     'author': 'Monzione Marco',
-    'website': '...',
+    'website': 'https://www.compassion.ch',
     'category': 'Banking addons',
     'depends': [
         'account',
+        'account_payment_order',
+        'account_bank_statement_import_camt_details'
+    ],
+    'demo': [
+        'res/lsv-dd-test.yml',
+    ],
+    'test': [
+
     ],
 }

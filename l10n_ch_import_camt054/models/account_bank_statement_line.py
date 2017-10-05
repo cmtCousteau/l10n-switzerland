@@ -11,60 +11,58 @@ class AccountBankStatementLine(models.Model):
 
     acct_svcr_ref = fields.Char()
 
+    def _prepare_reconciliation_move_line(self, move, amount):
+        data = super(AccountBankStatementLine,self).\
+            _prepare_reconciliation_move_line(move, amount)
+        data['acct_svcr_ref'] = self.acct_svcr_ref
+        return data
+
     def camt054_reconcile(self, account_code):
         move_line_obj = self.env['account.move.line']
 
-        move_line_obj = move_line_obj.search([
+        move_line_list = move_line_obj.search([
             ('reconciled', '!=', 'False'),
-            ('account_id.code', '=', account_code)
+            ('account_id.code', '=', account_code),
+            ('acct_svcr_ref', '!=', None)
         ])
 
         list_line = dict()
 
         # Group each line by acct_svcr_ref
-        for line in move_line_obj:
+        for line in move_line_list:
             acct_svcr_ref = line.acct_svcr_ref
-            # If there is no acct_svcr_ref, check in the counterpart to find one
-            if not acct_svcr_ref:
-                line_move_id = line.move_id
-                # Search for all line with te given move_id
-                move_line_obj_tmp = move_line_obj.search([
-                    ('move_id.id', '=', line_move_id.id)])
 
-                line_init_acct_svcr_ref = move_line_obj_tmp[0].acct_svcr_ref
-                for line_tmp in move_line_obj_tmp:
-                    if line_tmp.acct_svcr_ref:
-                        # Check if all the counter part have the same acct_svcr_ref
-                        if line_init_acct_svcr_ref == line_tmp.acct_svcr_ref:
-                            acct_svcr_ref = line_tmp.acct_svcr_ref
-                        else:
-                            acct_svcr_ref = False
-                            break
-                line.acct_svcr_ref = acct_svcr_ref
-
-            if acct_svcr_ref:
-                # Add the acct_svcr_ref to the list if it's not already present
-                if acct_svcr_ref not in list_line:
-                    list_line[acct_svcr_ref] = []
-                # If it is already present we add the line the the list of
-                # this acct_svcr_ref
-                list_line[acct_svcr_ref].append(line)
+            # Add the acct_svcr_ref to the list if it's not already present
+            if acct_svcr_ref not in list_line:
+                list_line[acct_svcr_ref] = []
+            # If it is already present we add the line the the list of
+            # this acct_svcr_ref
+            list_line[acct_svcr_ref].append(line)
 
         for list_acct_svcr_ref in list_line:
+
             credit = 0
             debit = 0
-            move_line_obj = move_line_obj.search([
+            move_line_list = move_line_obj.search([
                 ('acct_svcr_ref', '=', list_acct_svcr_ref),
                 ('reconciled', '!=', 'False'),
                 ('account_id.code', '=', account_code)])
 
+            move_line_counter_part = move_line_obj.search([
+                ('acct_svcr_ref', '=', list_acct_svcr_ref),
+                ('reconciled', '!=', 'False')
+            ]) - move_line_list
+
+            move_line_to_reconcile = move_line_obj.search([
+                ('move_id.id', '=', move_line_counter_part.move_id.id),
+                ('id', '!=', move_line_counter_part.id)])
+
+            move_line_list += move_line_to_reconcile
+
             # Check if credit = debit
-            for line in list_line[list_acct_svcr_ref]:
+            for line in move_line_list:
                 credit += line.credit
                 debit += line.debit
             if credit == debit:
-                move_line_obj.process_reconciliation(dict())
-
-
-
+                move_line_list.process_reconciliation(dict())
 

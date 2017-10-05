@@ -27,12 +27,13 @@ class Pain000Parser(models.AbstractModel):
                           ':OrgnlMsgNmId', result, 'orgnl_msg_nm_Id')
             account_bank_parser_obj.add_value_from_node(
                 ns, root, './ns:CstmrPmtStsRpt/ns:OrgnlPmtInfAndSts/ns'
-                          ':OrgnlPmtInfId', result, 'orgnl_pmt_inf_id')
+                          ':TxInfAndSts/ns:OrgnlEndToEndId', result,
+                'orgnl_end_to_end_id')
 
             account_bank_parser_obj.add_value_from_node(
                 ns, root, './ns:CstmrPmtStsRpt'
-                          '/ns:OrgnlPmtInfAndSts/ns:PmtInfSts',
-                result, 'pmt_inf_sts')
+                          '/ns:OrgnlPmtInfAndSts/ns:TxInfAndSts/ns:TxSts',
+                result, 'tx_sts')
 
             account_bank_parser_obj.add_value_from_node(
                 ns, root, './ns:CstmrPmtStsRpt/ns:OrgnlPmtInfAndSts/ns'
@@ -51,14 +52,15 @@ class Pain000Parser(models.AbstractModel):
                 'add_tl_inf')
 
             if len(result) > 1 and 'orgnl_msg_nm_Id' in result:
-                if result['orgnl_msg_nm_Id'] == 'pain.001':
-                    if 'pmt_inf_sts' in result:
-                        if result['pmt_inf_sts'] == 'RJCT':
+                if 'pain.001' not in result['orgnl_msg_nm_Id'] or \
+                   'pain.008' not in result['orgnl_msg_nm_Id']:
+                    if 'TxSts' in result:
+                        if result['tx_sts'] == 'RJCT':
 
                             payment_order_obj = payment_order_obj.search(
                                 [('name', '=', result['orgnl_msg_id'])])
                             payment_line_obj = payment_line_obj.search(
-                                [('name', '=', result['orgnl_pmt_inf_id'])])
+                                [('name', '=', result['orgnl_end_to_end_id'])])
 
                             undo_payment_line_obj.undo_payment_line(
                                 payment_order_obj,

@@ -1,7 +1,6 @@
 import re
-from lxml import etree
 
-from openerp import models
+from odoo import models
 
 
 class customParser(models.AbstractModel):
@@ -31,7 +30,7 @@ class customParser(models.AbstractModel):
                 './ns:NtryDtls/ns:Btch/ns:PmtInfId',
                 './ns:NtryDtls/ns:TxDtls/ns:Refs/ns:AcctSvcrRef'
             ],
-            transaction, 'ref'
+            transaction, 'acct_svcr_ref'
         )
         details_nodes = node.xpath(
             './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})
@@ -53,9 +52,11 @@ class customParser(models.AbstractModel):
         found_node = node.xpath('../../ns:AcctSvcrRef', namespaces={'ns': ns})
         if len(found_node) != 0:
             self.add_value_from_node(
-                ns, node, '../../ns:AcctSvcrRef', transaction, 'acct_svcr_ref')
+                ns, node, '../../ns:AcctSvcrRef', transaction,
+                'acct_svcr_ref')
         else:
-            self.add_value_from_node(ns, node, './ns:Refs/ns:AcctSvcrRef', transaction,'acct_svcr_ref')
+            self.add_value_from_node(ns, node, './ns:Refs/ns:AcctSvcrRef',
+                                     transaction,'acct_svcr_ref')
 
     def parse_statement(self, ns, node):
         result = super(customParser, self).parse_statement(ns, node)
