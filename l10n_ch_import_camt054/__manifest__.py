@@ -7,6 +7,7 @@
     'category': 'Banking addons',
     'depends': [
         'account_bank_statement_import_camt_details',
+        'l10n_ch_fds_postfinance',
     ],
     'data': [
         'views/account_bank_statement_line_test.xml',

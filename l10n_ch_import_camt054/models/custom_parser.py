@@ -1,7 +1,7 @@
 import re
 
 from odoo import models
-
+from lxml import etree
 
 class customParser(models.AbstractModel):
     _inherit = 'account.bank.statement.import.camt.parser'
@@ -59,19 +59,44 @@ class customParser(models.AbstractModel):
                                      transaction,'acct_svcr_ref')
 
     def parse_statement(self, ns, node):
-        result = super(customParser, self).parse_statement(ns, node)
-        self.add_value_from_node(
-            ns, node, './ns:Ntry/ns:NtryRef', result, 'ntryRef')
+
+        result = {}
+        entry_nodes = node.xpath('./ns:Ntry', namespaces={'ns': ns})
+        entry_ref = node.xpath('./ns:Ntry', namespaces={'ns': ns})
+
+        if len(entry_nodes) > 0:
+            result = super(customParser, self).parse_statement(ns, node)
+
+            entry_ref = node.xpath('./ns:Ntry/ns:NtryRef', namespaces={
+                'ns': ns})
+            if len(entry_ref) > 1:
+                first_entry = entry_ref[0].text
+                #Parse all entry ref node to check if they're all the same.
+                for entry in entry_ref:
+                    if first_entry != entry.text:
+                        raise ValueError('Different entry ref in same file '
+                                         'not supported !')
+            self.add_value_from_node(
+                ns, node, './ns:Ntry/ns:NtryRef', result, 'ntryRef')
+            result['camt_headers'] = ns
+        # In case of an empty camt file
+        else:
+            transactions = []
+            result['transactions'] = ''
+            result['is_empty'] = True
         return result
 
     def parse(self, data):
+
         result = super(customParser, self).parse(data)
         currency = result[0]
         account_number = result[1]
         statements = result[2]
-
-        if 'ntryRef' in statements[0]:
-            account_number = statements[0]['ntryRef']
+        if len(statements) > 0:
+            if 'camt_headers' in statements[0]:
+                if 'camt.053' not in statements[0]['camt_headers']:
+                    if 'ntryRef' in statements[0]:
+                        account_number = statements[0]['ntryRef']
         return currency, account_number, statements
 
     def get_balance_amounts(self, ns, node):

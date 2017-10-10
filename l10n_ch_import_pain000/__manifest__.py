@@ -6,9 +6,11 @@
     'website': 'https://www.compassion.ch',
     'category': 'Banking addons',
     'depends': [
-        'account',
         'account_payment_order',
         'account_bank_statement_import_camt_details'
+    ],
+    'data': [
+        'views/fds_postfinance_file_view.xml',
     ],
     'demo': [
         'res/lsv-dd-test.yml',

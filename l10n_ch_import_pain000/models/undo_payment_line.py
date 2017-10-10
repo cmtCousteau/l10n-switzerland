@@ -1,7 +1,7 @@
 from odoo import models
 
 
-class UndoPaymentLine(models.Model):
+class UndoPaymentLine(models.AbstractModel):
     _name = 'account.undo.payment_line'
 
     def undo_payment_line(self,

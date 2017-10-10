@@ -54,17 +54,21 @@ class Pain000Parser(models.AbstractModel):
             if len(result) > 1 and 'orgnl_msg_nm_Id' in result:
                 if 'pain.001' not in result['orgnl_msg_nm_Id'] or \
                    'pain.008' not in result['orgnl_msg_nm_Id']:
+
+                    if 'orgnl_msg_id' in result:
+                        payment_order_obj = payment_order_obj.search(
+                            [('name', '=', result['orgnl_msg_id'])])
+
+                    if 'orgnl_end_to_end_id' in result:
+                        payment_line_obj = payment_line_obj.search(
+                            [('name', '=', result['orgnl_end_to_end_id'])])
+
                     if 'TxSts' in result:
                         if result['tx_sts'] == 'RJCT':
-
-                            payment_order_obj = payment_order_obj.search(
-                                [('name', '=', result['orgnl_msg_id'])])
-                            payment_line_obj = payment_line_obj.search(
-                                [('name', '=', result['orgnl_end_to_end_id'])])
-
-                            undo_payment_line_obj.undo_payment_line(
-                                payment_order_obj,
-                                payment_line_obj,
-                                result)
-                    return True
-        return False
+                            if undo_payment_line_obj.undo_payment_line(
+                                                payment_order_obj,
+                                                payment_line_obj,
+                                                result):
+                                return True, None
+                    return True, payment_order_obj
+        return False, None
