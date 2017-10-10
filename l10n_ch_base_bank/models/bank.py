@@ -6,6 +6,8 @@ from odoo import models, fields, api, _
 from odoo.tools import mod10r
 from odoo import exceptions
 
+from odoo.addons.base.res.res_bank import sanitize_account_number
+
 from odoo.addons.base_iban.models.res_partner_bank import normalize_iban
 
 
@@ -181,11 +183,33 @@ class ResPartnerBank(models.Model, BankCommon):
         store=True
     )
 
+    def _compute_sanitized_acc_number(self):
+        postal_banks = self.filtered(lambda a: a.acc_type == 'postal')
+        other_banks = self.filtered(lambda a: a.acc_type != 'postal')
+
+        for bank in postal_banks:
+            list_sub_string = bank.acc_number.split('-')
+
+            # Add the missing 0 the the first part of the account number.
+            if len(list_sub_string[0]) < 2:
+                list_sub_string[0] = '0' + list_sub_string[0]
+
+            # Add the missing 0 to the middle part of the account number.
+            while len(list_sub_string[1]) < 6:
+                list_sub_string[1] = '0' + list_sub_string[1]
+
+            # Reassembly of the account number.
+            bank.sanitized_acc_number = list_sub_string[0] +\
+                                     list_sub_string[1] +\
+                                     list_sub_string[2]
+
+        super(ResPartnerBank, other_banks)._compute_sanitized_acc_number()
+
     @api.one
     @api.depends('acc_number')
     def _compute_acc_type(self):
         if (self.acc_number and
-                self.is_swiss_postal_num(self.acc_number)):
+                    self.is_swiss_postal_num(self.acc_number)):
             self.acc_type = 'postal'
             return
         super(ResPartnerBank, self)._compute_acc_type()
