@@ -4,10 +4,7 @@ from odoo import models
 class UndoPaymentLine(models.AbstractModel):
     _name = 'account.undo.payment_line'
 
-    def undo_payment_line(self,
-                          payment_order_obj,
-                          payment_line_obj,
-                          data_supp):
+    def undo_payment_line(self,payment_order_obj, payment_line_obj,data_supp):
 
         account_move_line_obj = self.env['account.move.line']
         account_move_obj = self.env['account.move']
@@ -19,8 +16,8 @@ class UndoPaymentLine(models.AbstractModel):
             for payment_line in payment_line_obj:
                 move_line_id = payment_line.move_line_id.id
 
-                account_move_line = account_move_line_obj.search([('id', '=',
-                                                               move_line_id)])
+                account_move_line = account_move_line_obj.search(
+                    [('id', '=', move_line_id)])
 
                 move_id = account_move_line.move_id.id
 
@@ -53,19 +50,16 @@ class UndoPaymentLine(models.AbstractModel):
                 if len(payment_line) == 0:
                     if payment_order_obj.state == 'uploaded':
                         payment_order_obj.action_done_cancel()
+
+                if display_name:
+                    if data_supp and 'add_tl_inf' in data_supp:
+                        payment_order_obj.message_post(
+                            display_name + " has been removed "
+                                           "because : " + data_supp[
+                                'add_tl_inf'])
                     else:
-                        payment_order_obj.unlink()
-                else:
-                    # Add a message only if the payment order still exist.
-                    if display_name:
-                        if data_supp and 'add_tl_inf' in data_supp:
-                            payment_order_obj.message_post(
-                                display_name + " has been removed "
-                                               "because : " + data_supp[
-                                    'add_tl_inf'])
-                        else:
-                            payment_order_obj.message_post(
-                                display_name + " has been removed no "
-                                               "reason given.")
+                        payment_order_obj.message_post(
+                            display_name + " has been removed no "
+                                           "reason given.")
             return True
         return False

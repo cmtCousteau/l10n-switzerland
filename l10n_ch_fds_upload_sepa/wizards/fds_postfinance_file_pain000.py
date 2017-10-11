@@ -20,16 +20,24 @@ class FdsPostfinanceFilePain000(models.Model):
             decoded_file = base64.b64decode(bank_wiz_imp.data_file)
             result = account_pain000.parse(decoded_file)
             if result[0]:
-                pf_file.payment_order = result[1].id
+                if result[1] is not None and result[1].id:
+                    # Link the payment order to the file import.
+                    pf_file.payment_order = result[1].id
+                    # Attach the file to the payment order.
+                    self.env['ir.attachment'].create({
+                            'datas_fname': pf_file.filename,
+                            'res_model': 'account.payment.order',
+                            'datas': bank_wiz_imp.data_file,
+                            'name': pf_file.filename,
+                            'res_id': result[1].id})
+
                 pf_file.write({
                     'state': 'done',
-                    'data': None,
+                    'data': bank_wiz_imp.data_file
                 })
 
                 _logger.info("[OK] import file '%s' as pain.000",
-                             (pf_file.filename))
-                # self.msg_file_imported += pf_file.filename + "; "
-                #self -= pf_file
+                             pf_file.filename)
                 return True
         return super(FdsPostfinanceFilePain000,
                      self).import2bankStatements()

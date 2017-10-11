@@ -9,6 +9,7 @@ class Pain000Parser(models.AbstractModel):
     def parse(self, data):
         payment_order_obj = self.env['account.payment.order']
         payment_line_obj = self.env['account.payment.line']
+        bank_payment_line_obj = self.env['bank.payment.line']
         account_bank_parser_obj = self.env[
             'account.bank.statement.import.camt.parser']
         undo_payment_line_obj = self.env['account.undo.payment_line']
@@ -60,15 +61,15 @@ class Pain000Parser(models.AbstractModel):
                             [('name', '=', result['orgnl_msg_id'])])
 
                     if 'orgnl_end_to_end_id' in result:
-                        payment_line_obj = payment_line_obj.search(
+                        bank_payment_line = bank_payment_line_obj.search(
                             [('name', '=', result['orgnl_end_to_end_id'])])
-
-                    if 'TxSts' in result:
+                        payment_line = payment_line_obj.search([(
+                            'bank_line_id', '=', bank_payment_line.id)])
+                    if 'tx_sts' in result:
                         if result['tx_sts'] == 'RJCT':
-                            if undo_payment_line_obj.undo_payment_line(
+                            undo_payment_line_obj.undo_payment_line(
                                                 payment_order_obj,
-                                                payment_line_obj,
-                                                result):
-                                return True, None
+                                                payment_line,
+                                                result)
                     return True, payment_order_obj
         return False, None
