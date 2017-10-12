@@ -197,11 +197,11 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
             :param recordset: of model fds_postfinance_file
             :returns None:
         '''
-        for fds_file in fds_files_ids:
-            if fds_file.import2bankStatements():
-                self.msg_file_imported += fds_file.filename + "; "
-            else:
-                self.msg_import_file_fail += fds_file.filename + "; "
+        fds_files_ids.import2bankStatements()
+        error = fds_files_ids.filtered(lambda r: r.state == 'error')
+        success = fds_files_ids - error
+        self.msg_file_imported += '; '.join(success.mapped('filename'))
+        self.msg_import_file_fail += '; '.join(error.mapped('filename'))
 
     @api.multi
     def _get_sftp_config(self):

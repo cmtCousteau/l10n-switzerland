@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
+<odoo>
         <record model="ir.ui.view" id="fds_postfinance_files_form_pain 000">
             <field name="name">FDS PostFinance file form pain 000</field>
             <field name="model">fds.postfinance.file</field>
@@ -10,4 +10,4 @@
                 </field>
             </field>
         </record>
-</openerp>
+</odoo>

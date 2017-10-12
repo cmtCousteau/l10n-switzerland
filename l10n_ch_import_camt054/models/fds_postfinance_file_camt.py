@@ -11,6 +11,8 @@ class FdsPostfinanceFileCamt(models.Model):
 
     @api.multi
     def import2bankStatements(self):
+
+        res = True
         account_camt_parser_obj = self.env[
             'account.bank.statement.import.camt.parser']
 
@@ -31,8 +33,10 @@ class FdsPostfinanceFileCamt(models.Model):
 
                 _logger.info("[OK] import file '%s' as an empty camt",
                              (pf_file.filename))
-                return True
-        return super(FdsPostfinanceFileCamt, self).import2bankStatements()
+            else:
+                res = super(FdsPostfinanceFileCamt,
+                            self).import2bankStatements()
+        return res
 
 
 

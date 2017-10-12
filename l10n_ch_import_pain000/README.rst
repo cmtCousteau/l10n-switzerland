@@ -21,6 +21,8 @@ If pmt is in return (use EndToEndId to identify the payment order payment.order.
     * reconcile together payment out with the in
     * do this in the completion/reconcile process
 
+Make tests
+
 Contributors
 ------------
 

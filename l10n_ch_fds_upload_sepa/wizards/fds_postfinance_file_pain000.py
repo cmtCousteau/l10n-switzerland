@@ -11,6 +11,7 @@ class FdsPostfinanceFilePain000(models.Model):
 
     @api.multi
     def import2bankStatements(self):
+        res = True
         account_pain000 = self.env['account.pain000.parser']
         for pf_file in self:
             values = {'data_file': pf_file.data}
@@ -38,6 +39,7 @@ class FdsPostfinanceFilePain000(models.Model):
 
                 _logger.info("[OK] import file '%s' as pain.000",
                              pf_file.filename)
-                return True
-        return super(FdsPostfinanceFilePain000,
-                     self).import2bankStatements()
+            else:
+                res = super(FdsPostfinanceFilePain000,
+                            self).import2bankStatements()
+        return res
