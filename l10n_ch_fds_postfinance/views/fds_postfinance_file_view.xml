@@ -79,7 +79,7 @@
         <field name="name">Import to Bank Statement</field>
         <field name="model_id" ref="model_fds_postfinance_file"/>
         <field name="state">code</field>
-        <field name="code">self.import_button(cr, uid, context.get('active_ids', []), context=context)</field>
+        <field name="code">records.import_button()</field>
     </record>
 
     <record id="import_files_more_item" model="ir.values">
@@ -93,7 +93,7 @@
         <field name="name">File Corrupt</field>
         <field name="model_id" ref="model_fds_postfinance_file"/>
         <field name="state">code</field>
-        <field name="code">self.change2error_button(cr, uid, context.get('active_ids', []), context=context)</field>
+        <field name="code">records.change2error_button()</field>
     </record>
 
     <record id="file_corrupt_more_item" model="ir.values">
@@ -107,7 +107,7 @@
         <field name="name">Cancel</field>
         <field name="model_id" ref="model_fds_postfinance_file"/>
         <field name="state">code</field>
-        <field name="code">self.change2cancel_button(cr, uid, context.get('active_ids', []), context=context)</field>
+        <field name="code">records.change2cancel_button()</field>
     </record>
 
     <record id="file_cancel_more_item" model="ir.values">
