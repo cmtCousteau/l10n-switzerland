@@ -12,31 +12,33 @@ class FdsPostfinanceFileCamt(models.Model):
     @api.multi
     def import2bankStatements(self):
 
-        res = True
+        camt_files = self.env[self._name]
         account_camt_parser_obj = self.env[
             'account.bank.statement.import.camt.parser']
 
         for pf_file in self:
-            #for pf_file in fds_file:
-            values = {'data_file': pf_file.data}
-            bs_import_obj = self.env['account.bank.statement.import']
-            bank_wiz_imp = bs_import_obj.create(values)
-            decoded_file = base64.b64decode(bank_wiz_imp.data_file)
-            result = account_camt_parser_obj.parse(decoded_file)
+            try:
+                decoded_file = base64.b64decode(pf_file.data)
 
-            if len(result) > 2 and result[0] is None and result[1] is \
-                    None:
-                pf_file.write({
-                    'state': 'done',
-                    'data': None,
-                 })
+                result = account_camt_parser_obj.parse(decoded_file)
 
-                _logger.info("[OK] import file '%s' as an empty camt",
-                             (pf_file.filename))
-            else:
-                res = super(FdsPostfinanceFileCamt,
-                            self).import2bankStatements()
-        return res
+                if len(result) > 2 and result[0] is None and result[1] is \
+                        None:
+                    pf_file.write({
+                        'state': 'done',
+                        'data': pf_file.data,
+                     })
+
+                    _logger.info("[OK] import file '%s' as an empty camt",
+                                 pf_file.filename)
+                    camt_files += pf_file
+            except:
+                pf_file._state_error_on()
+                _logger.warning("[FAIL] import file '%s' as an empy camt",
+                                (pf_file.filename))
+
+        return super(FdsPostfinanceFileCamt, self -
+                     camt_files).import2bankStatements()
 
 
 
