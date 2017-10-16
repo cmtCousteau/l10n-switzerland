@@ -33,6 +33,7 @@
     'depends': [
         'l10n_ch',
         'l10n_ch_payment_slip',
+        'l10n_ch_import_pain000',
         'account_payment_order',
         'account_payment_mode',
         'account_banking_mandate',

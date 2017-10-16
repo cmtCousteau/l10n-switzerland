@@ -2,7 +2,7 @@
   In order to test lsv and dd file generation, I will create a customer with
   3 bank accounts (one for each debit mode) and go through the entire generation
   process
-  
+
   I create the partner
 -
   !record {model: res.partner, id: customer, view: False}:
