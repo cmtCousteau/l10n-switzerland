@@ -1,13 +1,19 @@
 import re
 
 from odoo import models
-from lxml import etree
+
 
 class customParser(models.AbstractModel):
     _inherit = 'account.bank.statement.import.camt.parser'
 
     def parse_entry(self, ns, node):
         """Parse an Ntry node and yield transactions"""
+        bank_payment_line_obj = self.env['bank.payment.line']
+        payment_line_obj = self.env['account.payment.line']
+        undo_payment_line_obj = self.env['account.undo.payment_line']
+
+        test = dict()
+
         transaction = {'name': '/', 'amount': 0}  # fallback defaults
         self.add_value_from_node(
             ns, node, './ns:BkTxCd/ns:Prtry/ns:Cd', transaction,
@@ -32,6 +38,9 @@ class customParser(models.AbstractModel):
             ],
             transaction, 'acct_svcr_ref'
         )
+
+
+
         details_nodes = node.xpath(
             './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})
         if len(details_nodes) == 0:
@@ -39,6 +48,50 @@ class customParser(models.AbstractModel):
             self.add_value_from_node(
                 ns, node, './ns:AcctSvcrRef', transaction, 'acct_svcr_ref')
             return
+
+        self.add_value_from_node(
+            ns,
+            node,
+            './ns:BkTxCd/ns:Domn/ns:Fmly/ns:SubFmlyCd',
+            test,
+            'sub_fmly_cd')
+
+        self.add_value_from_node(
+            ns,
+            node,
+            './ns:NtryDtls/ns:TxDtls/ns:Refs/ns:EndToEndId',
+            test,
+            'EndToEndId')
+
+        inf = dict()
+
+        transaction['sub_fmly_cd'] = test['sub_fmly_cd']
+
+        if test['sub_fmly_cd'] == 'RRTN':
+            bank_payment_line = bank_payment_line_obj.search(
+                [('name', '=', test['EndToEndId'])])
+
+            payment_line = payment_line_obj.search(
+                [('bank_line_id', '=', bank_payment_line.id)])
+
+            payment_order = bank_payment_line.order_id
+            inf['add_tl_inf'] = transaction['name']
+
+            account_payment_mode = payment_order.payment_mode_id
+
+            if account_payment_mode.offsetting_account == 'bank_account':
+                te = True
+
+            if account_payment_mode.offsetting_account == 'transfer_account':
+                transfer_account = account_payment_mode.transfer_account_id
+                account_code = transfer_account.code
+                transaction['account_id'] = transfer_account.id
+
+
+            undo_payment_line_obj.undo_payment_line(payment_order,
+                                                      payment_line,
+                                                      inf)
+
         transaction_base = transaction
         for node in details_nodes:
             transaction = transaction_base.copy()
@@ -62,7 +115,6 @@ class customParser(models.AbstractModel):
 
         result = {}
         entry_nodes = node.xpath('./ns:Ntry', namespaces={'ns': ns})
-        entry_ref = node.xpath('./ns:Ntry', namespaces={'ns': ns})
 
         if len(entry_nodes) > 0:
             result = super(customParser, self).parse_statement(ns, node)

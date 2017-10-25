@@ -12,10 +12,8 @@
     'data': [
         'views/fds_postfinance_file_view.xml',
     ],
-    'demo': [
-        'res/lsv-dd-test.yml',
-    ],
     'test': [
 
     ],
+    'installable': True,
 }
