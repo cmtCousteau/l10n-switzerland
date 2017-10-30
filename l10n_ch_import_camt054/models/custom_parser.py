@@ -121,7 +121,7 @@ class customParser(models.AbstractModel):
 
             entry_ref = node.xpath('./ns:Ntry/ns:NtryRef', namespaces={
                 'ns': ns})
-            if len(entry_ref) > 1:
+            if len(entry_ref) > 1 and '054' in ns:
                 first_entry = entry_ref[0].text
                 #Parse all entry ref node to check if they're all the same.
                 for entry in entry_ref:
