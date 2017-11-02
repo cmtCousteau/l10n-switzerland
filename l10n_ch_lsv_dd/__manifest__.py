@@ -31,13 +31,7 @@
     'website': 'http://www.compassion.ch,http://www.braintec-group.com',
     'category': 'Localization',
     'depends': [
-        'l10n_ch',
         'l10n_ch_payment_slip',
-        'l10n_ch_import_pain000',
-        'account_payment_order',
-        'account_payment_mode',
-        'account_banking_mandate',
-        'account_banking_pain_base',
         'account_banking_sepa_direct_debit',
     ],
     'external_dependencies': {},
@@ -56,9 +50,8 @@
         'views/lsv_export_wizard_view.xml',
         'security/ir.model.access.csv',
     ],
-    'demo': [],
-    'test': [
-        'test/lsv-dd-test.yml',
+    'demo': [
+        'demo/lsv_dd_demo.yml'
     ],
     'auto_install': False,
     'installable': True,
