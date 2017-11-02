@@ -56,15 +56,16 @@ class Pain000Parser(models.AbstractModel):
                 if 'pain.001' not in result['orgnl_msg_nm_Id'] or \
                    'pain.008' not in result['orgnl_msg_nm_Id']:
 
-                    if 'orgnl_msg_id' in result:
-                        payment_order_obj = payment_order_obj.search(
-                            [('name', '=', result['orgnl_msg_id'])])
-
                     if 'orgnl_end_to_end_id' in result:
                         bank_payment_line = bank_payment_line_obj.search(
                             [('name', '=', result['orgnl_end_to_end_id'])])
+
                         payment_line = payment_line_obj.search([(
                             'bank_line_id', '=', bank_payment_line.id)])
+
+                        payment_order_obj = payment_order_obj.search(
+                            [('id', '=', bank_payment_line.order_id.id)])
+
                     if 'tx_sts' in result:
                         if result['tx_sts'] == 'RJCT':
                             undo_payment_line_obj.undo_payment_line(

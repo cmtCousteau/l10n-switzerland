@@ -64,5 +64,5 @@ class AccountBankStatementLine(models.Model):
                 credit += line.credit
                 debit += line.debit
             if credit == debit:
-                move_line_list.process_reconciliation(dict())
+                move_line_list.reconcile()
 

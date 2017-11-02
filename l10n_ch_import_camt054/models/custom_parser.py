@@ -12,8 +12,7 @@ class customParser(models.AbstractModel):
         payment_line_obj = self.env['account.payment.line']
         undo_payment_line_obj = self.env['account.undo.payment_line']
 
-        test = dict()
-
+        # Get some basic infos about the transaction in the XML.
         transaction = {'name': '/', 'amount': 0}  # fallback defaults
         self.add_value_from_node(
             ns, node, './ns:BkTxCd/ns:Prtry/ns:Cd', transaction,
@@ -39,8 +38,8 @@ class customParser(models.AbstractModel):
             transaction, 'acct_svcr_ref'
         )
 
-
-
+        # If there is a 'TxDtls' node in the XML we get the value of
+        # 'AcctSvcrRef' in it.
         details_nodes = node.xpath(
             './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})
         if len(details_nodes) == 0:
@@ -53,44 +52,40 @@ class customParser(models.AbstractModel):
             ns,
             node,
             './ns:BkTxCd/ns:Domn/ns:Fmly/ns:SubFmlyCd',
-            test,
+            transaction,
             'sub_fmly_cd')
 
         self.add_value_from_node(
             ns,
             node,
             './ns:NtryDtls/ns:TxDtls/ns:Refs/ns:EndToEndId',
-            test,
+            transaction,
             'EndToEndId')
 
-        inf = dict()
+        data_supp = dict()
 
-        transaction['sub_fmly_cd'] = test['sub_fmly_cd']
-
-        if test['sub_fmly_cd'] == 'RRTN':
+        # In the case of a transaction return we try to find the original
+        # transaction and link them together, we cancel the transaction
+        # in the payment order too.
+        if transaction['sub_fmly_cd'] == 'RRTN':
             bank_payment_line = bank_payment_line_obj.search(
-                [('name', '=', test['EndToEndId'])])
+                [('name', '=', transaction['EndToEndId'])])
 
             payment_line = payment_line_obj.search(
                 [('bank_line_id', '=', bank_payment_line.id)])
 
             payment_order = bank_payment_line.order_id
-            inf['add_tl_inf'] = transaction['name']
+            data_supp['add_tl_inf'] = transaction['name']
 
             account_payment_mode = payment_order.payment_mode_id
 
-            if account_payment_mode.offsetting_account == 'bank_account':
-                te = True
-
             if account_payment_mode.offsetting_account == 'transfer_account':
                 transfer_account = account_payment_mode.transfer_account_id
-                account_code = transfer_account.code
                 transaction['account_id'] = transfer_account.id
 
-
             undo_payment_line_obj.undo_payment_line(payment_order,
-                                                      payment_line,
-                                                      inf)
+                                                    payment_line,
+                                                    data_supp)
 
         transaction_base = transaction
         for node in details_nodes:
@@ -149,6 +144,10 @@ class customParser(models.AbstractModel):
                 if 'camt.053' not in statements[0]['camt_headers']:
                     if 'ntryRef' in statements[0]:
                         account_number = statements[0]['ntryRef']
+        statements[0]['data_file'] = self.data_file
+
+        if hasattr(self, 'file_name'):
+            statements[0]['file_name'] = self.file_name
         return currency, account_number, statements
 
     def get_balance_amounts(self, ns, node):
@@ -185,4 +184,3 @@ class customParser(models.AbstractModel):
             root_0_0 = root[0][0].tag[len(ns) + 2:]  # strip namespace
             if root_0_0 != 'GrpHdr':
                 raise ValueError('expected GrpHdr, got: ' + root_0_0)
-

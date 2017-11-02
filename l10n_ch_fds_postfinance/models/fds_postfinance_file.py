@@ -106,7 +106,10 @@ class FdsPostfinanceFile(models.Model):
         res = True
         for pf_file in self:
             try:
-                values = {'data_file': pf_file.data}
+                values = {
+                    'data_file': pf_file.data,
+                    'filename': pf_file.filename
+                }
                 bs_import_obj = self.env['account.bank.statement.import']
                 bank_wiz_imp = bs_import_obj.create(values)
                 import_result = bank_wiz_imp.import_file()
@@ -114,7 +117,6 @@ class FdsPostfinanceFile(models.Model):
                 # attached to the statement.
                 pf_file.write({
                     'state': 'done',
-                    'data': None,
                     'bank_statement_id':
                     import_result['context']['statement_ids'][0]})
                 _logger.info("[OK] import file '%s' to bank Statements",
