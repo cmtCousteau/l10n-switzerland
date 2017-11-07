@@ -144,7 +144,8 @@ class customParser(models.AbstractModel):
                 if 'camt.053' not in statements[0]['camt_headers']:
                     if 'ntryRef' in statements[0]:
                         account_number = statements[0]['ntryRef']
-        statements[0]['data_file'] = self.data_file
+
+            statements[0]['data_file'] = self.data_file
 
         if hasattr(self, 'file_name'):
             statements[0]['file_name'] = self.file_name
