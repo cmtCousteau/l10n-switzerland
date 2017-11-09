@@ -18,11 +18,11 @@
             <OrgnlMsgNmId>pain.001</OrgnlMsgNmId>
         </OrgnlGrpInfAndSts>
         <OrgnlPmtInfAndSts>
-            <OrgnlPmtInfId>P000013</OrgnlPmtInfId>
+            <OrgnlPmtInfId>P000030</OrgnlPmtInfId>
             <PmtInfSts>RJCT</PmtInfSts>
             <TxInfAndSts>
                 <OrgnlInstrId>NOTPROVIDED</OrgnlInstrId>
-                <OrgnlEndToEndId>P000013</OrgnlEndToEndId>
+                <OrgnlEndToEndId>Ltest</OrgnlEndToEndId>
                 <TxSts>RJCT</TxSts>
                 <StsRsnInf>
                     <Rsn>

@@ -12,8 +12,11 @@
     'data': [
         'views/fds_postfinance_file_view.xml',
     ],
-    'test': [
+    'demo': [
 
+    ],
+    'test': [
+        'res/test_data.yml',
     ],
     'installable': True,
 }
