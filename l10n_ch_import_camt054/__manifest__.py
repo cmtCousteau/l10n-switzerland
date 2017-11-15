@@ -8,8 +8,16 @@
     'depends': [
         'account_bank_statement_import_camt_details',
         'l10n_ch_fds_postfinance',
+        'l10n_ch_import_pain000',
     ],
     'data': [
         'views/account_bank_statement_line_test.xml',
     ],
+    'demo': [
+
+    ],
+    'test': [
+        'res/test_data.yml',
+    ],
+    'installable': True,
 }

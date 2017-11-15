@@ -11,9 +11,20 @@ class AccountBankStatementLine(models.Model):
 
     acct_svcr_ref = fields.Char()
 
+    def process_reconciliation(self, counterpart_aml_dicts=None,
+                               payment_aml_rec=None, new_aml_dicts=None):
+        counterpart_moves = super(AccountBankStatementLine, self).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, new_aml_dicts)
+
+        if hasattr(self, 'acct_svcr_ref') and self.acct_svcr_ref:
+            for move_line in counterpart_moves.line_ids:
+                move_line.acct_svcr_ref = self.acct_svcr_ref
+
+        return counterpart_moves
+
     def _prepare_reconciliation_move_line(self, move, amount):
         data = super(AccountBankStatementLine,self).\
             _prepare_reconciliation_move_line(move, amount)
+        # Add the acct svcr ref to both move line.
         data['acct_svcr_ref'] = self.acct_svcr_ref
         return data
 
@@ -47,17 +58,6 @@ class AccountBankStatementLine(models.Model):
                 ('acct_svcr_ref', '=', list_acct_svcr_ref),
                 ('reconciled', '!=', 'False'),
                 ('account_id.code', '=', account_code)])
-
-            move_line_counter_part = move_line_obj.search([
-                ('acct_svcr_ref', '=', list_acct_svcr_ref),
-                ('reconciled', '!=', 'False')
-            ]) - move_line_list
-
-            move_line_to_reconcile = move_line_obj.search([
-                ('move_id.id', '=', move_line_counter_part.move_id.id),
-                ('id', '!=', move_line_counter_part.id)])
-
-            move_line_list += move_line_to_reconcile
 
             # Check if credit = debit
             for line in move_line_list:
