@@ -43,8 +43,8 @@ class FdsPostfinanceFilePain000(models.Model):
 
                     pain_files += pf_file
             except:
-                pf_file._state_error_on()
-                _logger.warning("[FAIL] import file '%s' as pain 000",
-                                (pf_file.filename))
+                pf_file.state = 'error'
+                _logger.error("[FAIL] import file '%s' as pain 000",
+                                (pf_file.filename), exc_info=True)
 
         return super(FdsPostfinanceFilePain000, self-pain_files).import2bankStatements()
