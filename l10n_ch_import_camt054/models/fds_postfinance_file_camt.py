@@ -33,7 +33,7 @@ class FdsPostfinanceFileCamt(models.Model):
                                  pf_file.filename)
                     camt_files += pf_file
             except:
-                pf_file._state_error_on()
+                pf_file.write({'state': 'error'})
                 _logger.warning("[FAIL] import file '%s' as an empy camt",
                                 (pf_file.filename))
 
