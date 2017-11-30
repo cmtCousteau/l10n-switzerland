@@ -1,61 +1,115 @@
+# -*- coding: utf-8 -*-
 from odoo import models
 
 
 class UndoPaymentLine(models.AbstractModel):
     _name = 'account.undo.payment_line'
 
-    def undo_payment_line(self, payment_order_obj, payment_line_obj, data_supp):
+    def undo_payment_line(self, payment_order, bank_payment_line,
+                          data_supp):
+        """
+         This method proceed to call private methods to remove payment
+         from payment order
 
-        account_move_line_obj = self.env['account.move.line']
-        account_move_obj = self.env['account.move']
+        :param payment_order: The order where to remove the payment
+        :param bank_payment_line: The payment to remove
+        :param data_supp: additional information used in the message
+        :return: -
+        """
 
-        if payment_order_obj and payment_line_obj:
-            for payment_order_line in payment_order_obj:
-                move_ids = payment_order_line.ids
+        if payment_order and bank_payment_line:
+            # Retrieve all account_payment_line associated to the
+            # current bank_payment_line
+            account_payment_lines = self.env['account.payment.line'].search(
+                [('bank_line_id', '=', bank_payment_line.id)])
 
-            for payment_line in payment_line_obj:
-                account_move_line = payment_line.move_line_id
+            if account_payment_lines:
+                self._process_invoice_remove(
+                    account_payment_lines, payment_order, data_supp)
 
-                move_id = account_move_line.move_id.id
+    def _process_invoice_remove(self, account_payment_lines, payment_order,
+                                data_supp):
+        """
+        This method unreconcile the given move lines and remove the payment.
 
-                display_name = account_move_line.display_name
+        :param account_payment_lines: The payment to remove
+        :param payment_order: The payment order where to remove the payment
+        :param data_supp: additional information used in the message
+        :return: -
+        """
 
-                account_full_reconcile_id = account_move_line.full_reconcile_id.id
+        # Retrieve all account_move_line(s) associated with the previous
+        # account_payment_line(s).
+        account_move_lines = account_payment_lines.mapped(
+            'move_line_id')
 
-                if account_full_reconcile_id:
+        full_reconcile_id = account_move_lines.mapped(
+            'full_reconcile_id').id
 
-                    # Get the counterpart move
-                    account_move_reconcilied = account_move_line_obj.search([
-                                                ('full_reconcile_id', '=',
-                                                account_full_reconcile_id),
-                                                ('move_id', '!=', move_id)])
+        # Retrieve the counterpart of the previous move_line(s).
+        # The counter parth should always be unique.
+        account_move_line_counterpart = self.env['account.move.line'].search([
+            ('full_reconcile_id', '=', full_reconcile_id),
+            ('id', 'not in', account_move_lines.ids)], limit=1)
 
-                    account_move = account_move_obj.search(
-                        [('id', '=', account_move_reconcilied.move_id.id)])
+        account_move_counterpart = account_move_line_counterpart.move_id
+        # All the move lines with the same reconcile id are unreonciled.
+        account_move_line_counterpart.remove_move_reconcile()
 
-                    account_move_reconcilied.remove_move_reconcile()
-                    # unpost and delete the move from the journal.
-                    account_move.button_cancel()
-                    account_move.unlink()
+        # unpost and delete the move from the journal.
+        account_move_counterpart.button_cancel()
+        account_move_counterpart.unlink()
 
-                # Delete the payment line in the payment order.
-                payment_line.unlink()
-                # Search if there is something left in the payment order.
-                payment_line = payment_line_obj.search([('order_id', '=', move_ids)])
-                if len(payment_line) == 0:
-                    if payment_order_obj.state == 'uploaded':
-                        payment_order_obj.action_done_cancel()
+        # Delete the payment line in the payment order.
+        account_payment_lines.unlink()
 
-                if display_name:
-                    if data_supp and 'add_tl_inf' in data_supp:
-                        payment_order_obj.message_post(
-                            display_name + " has been removed because : " + data_supp['add_tl_inf'])
+        # Search if there is something left in the payment order.
+        account_payment_line = self.env['account.payment.line'].search(
+            [('order_id', '=', payment_order.id)])
+        if len(account_payment_line) == 0 and \
+                        payment_order.state == 'uploaded':
+                payment_order.action_done_cancel()
 
-                        account_move_line.invoice_id.message_post(
-                            display_name + " has been removed because : " + data_supp['add_tl_inf'])
+        # Add the message to the invoice and to the payment order
+        self._post_message(data_supp, account_move_lines, payment_order)
 
-                    else:
-                        payment_order_obj.message_post(display_name + " has been removed no reason given.")
-                        account_move_line.invoice_id.message_post(display_name + " has been removed no reason given.")
-            return True
-        return False
+    def _post_message(self, data_supp, account_move_lines, payment_order):
+        """
+        This method is used to post message on the invoices that have been
+        deleted from the payment order and it post a message too on the
+        payment order for each deleted invoice.
+
+        :param data_supp: additional information used in the message
+        :param account_move_lines: used to find the invoices where to post
+        the message
+        :param payment_order: used to post the message for each
+        deleted invoices
+        :return: -
+        """
+        for account_move_line in account_move_lines:
+
+            # Create a link to the invoice that was removed
+            url = '<a href="web#id={}&view_type=form&model=' \
+                  'account.invoice">{}</a>'. \
+                format(account_move_line.invoice_id.id,
+                       account_move_line.invoice_id.move_name)
+
+            if data_supp and 'add_tl_inf' in data_supp:
+
+                # Add a message to the invoice
+                account_move_line.invoice_id.message_post(
+                    "The invoice has been removed from the payment "
+                    "order because: " +
+                    data_supp['add_tl_inf'])
+                # Add a message to the payment order
+                payment_order.message_post(
+                    url + " has been removed because : " + data_supp[
+                        'add_tl_inf'])
+            else:
+                # Add a message to the invoice
+                account_move_line.invoice_id.message_post(
+                    "The invoice has been removed from the payment order,"
+                    " no reason given.")
+                # Add a message to the payment order
+                payment_order.message_post(
+                    url + " has been removed no reason given.")
