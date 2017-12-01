@@ -1,24 +1,4 @@
-##############################################################################
-#
-#    Swiss localization Direct Debit module for OpenERP
-#    Copyright (C) 2014 Compassion (http://www.compassion.ch)
-#    @author: Cyril Sester <cyril.sester@outlook.com>
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
-
+# -*- coding: utf-8 -*-
 from odoo import models, api, _, exceptions
 
 
@@ -44,12 +24,18 @@ class AccountInvoice(models.Model):
         move_ids = self.browse(active_ids).mapped('move_id.id')
 
         move_line_ids = mov_line_obj.search([('move_id', 'in', move_ids)]).ids
-        pay_lines = pay_line_obj.search([('move_line_id',
+        payment_lines = pay_line_obj.search([('move_line_id',
                                           'in', move_line_ids)])
-        if not pay_lines:
+
+        if not payment_lines:
             raise exceptions.Warning(_('No payment line found !'))
 
-        old_pay_order = pay_lines[0].order_id
+        bank_payment_lines = payment_lines.mapped('bank_line_id')
+        # It should have only one payment order
+        old_pay_order = payment_lines.mapped('order_id')
 
-        undo_payment_line_obj.undo_payment_line(old_pay_order, pay_lines, None)
+        for bank_payment_line in bank_payment_lines:
+            undo_payment_line_obj.undo_payment_line(old_pay_order,
+                                                    bank_payment_line,
+                                                    None)
 

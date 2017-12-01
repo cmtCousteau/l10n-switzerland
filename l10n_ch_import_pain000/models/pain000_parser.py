@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from odoo import models
 
 from lxml import etree
@@ -9,7 +10,6 @@ class Pain000Parser(models.AbstractModel):
     def _parse_detail(self, result, node, ns):
 
         payment_order_obj = self.env['account.payment.order']
-        payment_line_obj = self.env['account.payment.line']
         bank_payment_line_obj = self.env['bank.payment.line']
         account_bank_parser_obj = self.env[
             'account.bank.statement.import.camt.parser']
@@ -42,19 +42,13 @@ class Pain000Parser(models.AbstractModel):
             if not bank_payment_line:
                 return
 
-            payment_line = payment_line_obj.search([(
-                'bank_line_id', '=', bank_payment_line.id)])
-
-            if not payment_line:
-                return
-
             payment_order_obj = payment_order_obj.search(
                 [('name', '=', result['orgnl_msg_id'])])
 
             if 'tx_sts' in result and result['tx_sts'] == 'RJCT':
                     undo_payment_line_obj.undo_payment_line(
                         payment_order_obj,
-                        payment_line,
+                        bank_payment_line,
                         result)
 
     def parse(self, data):

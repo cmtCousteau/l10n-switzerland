@@ -83,8 +83,9 @@ class customParser(models.AbstractModel):
                 transfer_account = account_payment_mode.transfer_account_id
                 transaction['account_id'] = transfer_account.id
 
+            bank_payment_line = payment_line.mapped('bank_line_id')
             undo_payment_line_obj.undo_payment_line(payment_order,
-                                                    payment_line,
+                                                    bank_payment_line,
                                                     data_supp)
 
         transaction_base = transaction
