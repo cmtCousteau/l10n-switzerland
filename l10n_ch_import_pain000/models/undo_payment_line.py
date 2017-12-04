@@ -40,25 +40,30 @@ class UndoPaymentLine(models.AbstractModel):
 
         # Retrieve all account_move_line(s) associated with the previous
         # account_payment_line(s).
-        account_move_lines = account_payment_lines.mapped(
+        all_account_move_lines = account_payment_lines.mapped(
             'move_line_id')
 
-        full_reconcile_id = account_move_lines.mapped(
+        # Keep only the move lines that belong to the desired payment order
+        filtered_move_lines = all_account_move_lines.filtered(
+            lambda l: l.move_id.payment_order_id == payment_order)
+
+        full_reconcile_id = filtered_move_lines.mapped(
             'full_reconcile_id').id
 
-        # Retrieve the counterpart of the previous move_line(s).
-        # The counter parth should always be unique.
-        account_move_line_counterpart = self.env['account.move.line'].search([
-            ('full_reconcile_id', '=', full_reconcile_id),
-            ('id', 'not in', account_move_lines.ids)], limit=1)
+        if full_reconcile_id:
+            # Retrieve the counterpart of the previous move_line(s).
+            # The counter parth should always be unique.
+            account_move_line_counterpart = self.env['account.move.line'].\
+                search([('full_reconcile_id', '=', full_reconcile_id),
+                        ('id', 'not in', filtered_move_lines.ids)], limit=1)
 
-        account_move_counterpart = account_move_line_counterpart.move_id
-        # All the move lines with the same reconcile id are unreonciled.
-        account_move_line_counterpart.remove_move_reconcile()
+            account_move_counterpart = account_move_line_counterpart.move_id
+            # All the move lines with the same reconcile id are unreonciled.
+            account_move_line_counterpart.remove_move_reconcile()
 
-        # unpost and delete the move from the journal.
-        account_move_counterpart.button_cancel()
-        account_move_counterpart.unlink()
+            # unpost and delete the move from the journal.
+            account_move_counterpart.button_cancel()
+            account_move_counterpart.unlink()
 
         # Delete the payment line in the payment order.
         account_payment_lines.unlink()
@@ -71,7 +76,7 @@ class UndoPaymentLine(models.AbstractModel):
                 payment_order.action_done_cancel()
 
         # Add the message to the invoice and to the payment order
-        self._post_message(data_supp, account_move_lines, payment_order)
+        self._post_message(data_supp, filtered_move_lines, payment_order)
 
     def _post_message(self, data_supp, account_move_lines, payment_order):
         """
