@@ -43,11 +43,7 @@ class UndoPaymentLine(models.AbstractModel):
         all_account_move_lines = account_payment_lines.mapped(
             'move_line_id')
 
-        # Keep only the move lines that belong to the desired payment order
-        filtered_move_lines = all_account_move_lines.filtered(
-            lambda l: l.move_id.payment_order_id == payment_order)
-
-        full_reconcile_id = filtered_move_lines.mapped(
+        full_reconcile_id = all_account_move_lines.mapped(
             'full_reconcile_id').id
 
         if full_reconcile_id:
@@ -55,11 +51,15 @@ class UndoPaymentLine(models.AbstractModel):
             # The counter parth should always be unique.
             account_move_line_counterpart = self.env['account.move.line'].\
                 search([('full_reconcile_id', '=', full_reconcile_id),
-                        ('id', 'not in', filtered_move_lines.ids)], limit=1)
+                        ('id', 'not in', all_account_move_lines.ids),],limit=1)
 
-            account_move_counterpart = account_move_line_counterpart.move_id
-            # All the move lines with the same reconcile id are unreonciled.
-            account_move_line_counterpart.remove_move_reconcile()
+            # Keep only the move lines that belong to the desired payment order
+            filtered_move_lines_counterpart = account_move_line_counterpart.\
+                filtered(lambda l: l.move_id.payment_order_id == payment_order)
+
+            account_move_counterpart = filtered_move_lines_counterpart.move_id
+            # All the move lines with the same reconcile id are unreconciled.
+            filtered_move_lines_counterpart.remove_move_reconcile()
 
             # unpost and delete the move from the journal.
             account_move_counterpart.button_cancel()
@@ -76,7 +76,7 @@ class UndoPaymentLine(models.AbstractModel):
                 payment_order.action_done_cancel()
 
         # Add the message to the invoice and to the payment order
-        self._post_message(data_supp, filtered_move_lines, payment_order)
+        self._post_message(data_supp, all_account_move_lines, payment_order)
 
     def _post_message(self, data_supp, account_move_lines, payment_order):
         """
