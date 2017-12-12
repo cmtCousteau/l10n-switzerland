@@ -10,7 +10,8 @@ class customParser(models.AbstractModel):
         """Parse an Ntry node and yield transactions"""
         bank_payment_line_obj = self.env['bank.payment.line']
         payment_line_obj = self.env['account.payment.line']
-        undo_payment_line_obj = self.env['account.undo.payment_line']
+        account_payment_cancel = self.env['account.payment.cancel']
+
 
         # Get some basic infos about the transaction in the XML.
         transaction = {'name': '/', 'amount': 0}  # fallback defaults
@@ -84,9 +85,9 @@ class customParser(models.AbstractModel):
                 transaction['account_id'] = transfer_account.id
 
             bank_payment_line = payment_line.mapped('bank_line_id')
-            undo_payment_line_obj.undo_payment_line(payment_order,
-                                                    bank_payment_line,
-                                                    data_supp)
+            account_payment_cancel.cancel_payment(payment_order,
+                                                 bank_payment_line,
+                                                 data_supp)
 
         transaction_base = transaction
         for node in details_nodes:

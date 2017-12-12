@@ -7,10 +7,11 @@
     'category': 'Banking addons',
     'depends': [
         'account_payment_order',
-        'account_bank_statement_import_camt_details'
+        'account_bank_statement_import_camt',
+        'account_payment_cancel',
     ],
     'data': [
-        'views/fds_postfinance_file_view.xml',
+
     ],
     'demo': [
 

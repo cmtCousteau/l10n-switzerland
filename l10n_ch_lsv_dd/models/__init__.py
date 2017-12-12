@@ -22,6 +22,5 @@
 from . import account_payment_method
 from . import banking_export_ch_dd
 from . import bank
-from . import invoice
 from . import move_line
 from . import account_payment_order

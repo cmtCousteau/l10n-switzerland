@@ -21,8 +21,8 @@ class TestImportPain000(TransactionCase):
 
         self.invoice_name = 'test invoice pain000'
         self.invoice_line_name = 'test invoice line pain000'
-        self.order_name = 'order test pain000'
-        self.journal_name = 'journal test pain002 import'
+        self.order_name = '2017/1013'
+        self.journal_name = '2017/1013'
         self.payment_line_name = 'Ltest'
 
         self.account_pain000 = self.env['account.pain000.parser']
