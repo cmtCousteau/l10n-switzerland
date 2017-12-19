@@ -13,7 +13,7 @@ class Pain000Parser(models.AbstractModel):
         bank_payment_line_obj = self.env['bank.payment.line']
         account_bank_parser_obj = self.env[
             'account.bank.statement.import.camt.parser']
-        undo_payment_line_obj = self.env['account.undo.payment_line']
+        account_payment_cancel = self.env['account.payment.cancel']
 
         account_bank_parser_obj.add_value_from_node(
             ns, node, './ns:OrgnlEndToEndId', result,
@@ -46,7 +46,7 @@ class Pain000Parser(models.AbstractModel):
                 [('name', '=', result['orgnl_msg_id'])])
 
             if 'tx_sts' in result and result['tx_sts'] == 'RJCT':
-                    undo_payment_line_obj.undo_payment_line(
+                    account_payment_cancel.cancel_payment(
                         payment_order_obj,
                         bank_payment_line,
                         result)

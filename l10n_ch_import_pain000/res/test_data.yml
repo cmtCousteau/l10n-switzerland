@@ -28,7 +28,7 @@
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 -
   !record {model: account.journal, id: lsv_account_journal, view: False}:
-    name: 'journal test pain002 import'
+    name: '2017/1013'
     type: bank
     bank_account_id: company_bank_post
     update_posted: True

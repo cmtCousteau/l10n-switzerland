@@ -46,7 +46,6 @@
         'views/bank_payment_line_view.xml',
         'views/bank_view.xml',
         'views/dd_export_wizard_view.xml',
-        'views/invoice_view.xml',
         'views/lsv_export_wizard_view.xml',
         'security/ir.model.access.csv',
     ],

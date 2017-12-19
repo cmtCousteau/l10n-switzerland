@@ -40,6 +40,7 @@
         'views/payment_order_upload_sepa_wizard_view.xml',
         'views/fds_postfinance_account_sepa_view.xml',
         'security/ir.model.access.csv',
+        'views/fds_postfinance_file_view.xml',
     ],
     'images': [],
     'demo': [],
