@@ -3,15 +3,13 @@ import re
 from odoo import models
 
 
-class customParser(models.AbstractModel):
+class CustomParser(models.AbstractModel):
     _inherit = 'account.bank.statement.import.camt.parser'
 
     def parse_entry(self, ns, node):
         """Parse an Ntry node and yield transactions"""
         bank_payment_line_obj = self.env['bank.payment.line']
         payment_line_obj = self.env['account.payment.line']
-        account_payment_cancel = self.env['account.payment.cancel']
-
 
         # Get some basic infos about the transaction in the XML.
         transaction = {'name': '/', 'amount': 0}  # fallback defaults
@@ -84,10 +82,10 @@ class customParser(models.AbstractModel):
                 transfer_account = account_payment_mode.transfer_account_id
                 transaction['account_id'] = transfer_account.id
 
-            bank_payment_line = payment_line.mapped('bank_line_id')
-            account_payment_cancel.cancel_payment(payment_order,
-                                                 bank_payment_line,
-                                                 data_supp)
+            payment_line.write({
+                'cancel_reason': transaction['name'].encode('utf-8')
+            })
+            payment_line.cancel_line()
 
         transaction_base = transaction
         for node in details_nodes:
@@ -96,7 +94,7 @@ class customParser(models.AbstractModel):
             yield transaction
 
     def parse_transaction_details(self, ns, node, transaction):
-        super(customParser, self).parse_transaction_details(
+        super(CustomParser, self).parse_transaction_details(
             ns, node, transaction)
         # Check if a global AcctSvcrRef exist
         found_node = node.xpath('../../ns:AcctSvcrRef', namespaces={'ns': ns})
@@ -114,7 +112,7 @@ class customParser(models.AbstractModel):
         entry_nodes = node.xpath('./ns:Ntry', namespaces={'ns': ns})
 
         if len(entry_nodes) > 0:
-            result = super(customParser, self).parse_statement(ns, node)
+            result = super(CustomParser, self).parse_statement(ns, node)
 
             entry_ref = node.xpath('./ns:Ntry/ns:NtryRef', namespaces={
                 'ns': ns})
@@ -130,14 +128,13 @@ class customParser(models.AbstractModel):
             result['camt_headers'] = ns
         # In case of an empty camt file
         else:
-            transactions = []
             result['transactions'] = ''
             result['is_empty'] = True
         return result
 
     def parse(self, data):
 
-        result = super(customParser, self).parse(data)
+        result = super(CustomParser, self).parse(data)
         currency = result[0]
         account_number = result[1]
         statements = result[2]
@@ -157,7 +154,7 @@ class customParser(models.AbstractModel):
         return currency, account_number, statements
 
     def get_balance_amounts(self, ns, node):
-        result = super(customParser, self).get_balance_amounts(ns, node)
+        result = super(CustomParser, self).get_balance_amounts(ns, node)
         start_balance_node = result[0]
         end_balance_node = result[0]
 
@@ -178,7 +175,7 @@ class customParser(models.AbstractModel):
 
     def check_version(self, ns, root):
         try:
-            super(customParser, self).check_version(ns, root)
+            super(CustomParser, self).check_version(ns, root)
         except ValueError:
             re_camt_version = re.compile(
                 r'(^urn:iso:std:iso:20022:tech:xsd:camt.054.'
